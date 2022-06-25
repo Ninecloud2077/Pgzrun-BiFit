@@ -12,8 +12,9 @@ class Block:
     def draw(self):
         self.Actor.draw()
 
+
 class Bullet:
-    def __init__(self,Owner,Img='pistol',Angle=0,Speed=3):
+    def __init__(self,Owner,Angle=0,Speed=5,Img='pistol'):
         self.Actor=Actor(Img,Owner.Actor.center)
         self.Actor.angle=Angle
         self.Team=Owner.Team
@@ -43,9 +44,32 @@ class Bullet:
                 return
         
 
+class Item:
+    def posinit(self):
+        self.Actor.midbottom=Blocks[randint(0,len(Blocks)-1)].Actor.midtop
+    def __init__(self,Img):
+        self.Actor=Actor(Img)
+        self.posinit()
+        self.Death=0
+
+    def draw(self):
+        self.Actor.draw()
+
+class Heal(Item):
+    def __init__(self,Img='heal'):
+        super().__init__(Img)
+
+    def up(self):
+        for i in Grand:
+            if self.Actor.colliderect(i.Actor):
+                i.takedmg(-2)
+                self.Death=1
+
+
 class Player:
     TeamsAndKeys={'red':keys.W, 'blue':keys.UP}
     TeamsAndBullets={'red':keys.SPACE, 'blue':keys.KP_ENTER}
+    
     def posinit(self):
         self.Actor.midbottom=Blocks[randint(0,len(Blocks)-1)].Actor.midtop
     def __init__(self,Team='red'):
@@ -54,8 +78,13 @@ class Player:
         self.HP=10
         self.Death=0
         self.Jump=1
+        self.FD=1
         self.Force=[0,0]
         self.posinit()
+
+    def draw(self):
+        self.Actor.draw()
+        screen.draw.text(str(self.HP),self.Actor.topleft,fontsize=15)
 
     def up(self):
         self.move()
@@ -70,10 +99,6 @@ class Player:
                     else:
                         self.Actor.x+=10
                     break
-        
-    def draw(self):
-        self.Actor.draw()
-        screen.draw.text(str(self.HP),self.Actor.topleft,fontsize=15)
         
     def move(self):
         for i in Blocks:
@@ -113,38 +138,44 @@ class Player:
         if self.Actor.bottom>HEIGHT:
             self.Force=[0,0]
             self.posinit()
-        
+
+
     def keyup(self):
         if self.Team=='red':
             if keyboard.a:
                 self.Force[0]=-3
+                self.FD=1
             if keyboard.d:
                 self.Force[0]=3
+                self.FD=0
         elif self.Team=='blue':
             if keyboard.left:
                 self.Force[0]=-3
+                self.FD=1
             if keyboard.right:
                 self.Force[0]=3
+                self.FD=0
 
     def keydown(self,key):
         if self.Jump and key==Player.TeamsAndKeys[self.Team]:
-            self.Force[1]=-15
             for i in Blocks:
-                if self.Actor.bottom==i.Actor.top:
+                if abs(self.Actor.bottom-i.Actor.top)<=3:
                     break
             else:
                 self.Jump-=1
                 self.Actor.image+='_d'
+            self.Force[1]=-15
 
         if key==Player.TeamsAndBullets[self.Team]:
-            Bullets.append(Bullet(self))
+            Bullets.append(Bullet(self,self.FD*180))
     
     def takedmg(self,Dmg):
         self.HP-=Dmg
-        if self.HP<=0:
+        if Dmg>0 and self.HP<=0:
             self.Death=1
-            
-
+        if Dmg<0 and self.HP>10:
+           self.HP=10
+ 
 
 Blocks=[]
 def blockinit():
@@ -166,13 +197,29 @@ def playerinit():
 playerinit()
 
 Bullets=[]
+Items=[Heal()]
 
 Winner=''
+
+def additem():
+    if len(Items)<5:
+        t=Heal()
+        w=1
+        while w:
+            for i in Items:
+                if t.Actor.center==i.Actor.center:
+                    t.posinit()
+                    break
+            else:
+                w=0
+                Items.append(t)
+clock.schedule_interval(additem,3)
+                
 
 def draw():
     global Grand,Blocks,Bullets,Winner
     screen.fill((180,180,180))
-    for i in Grand+Blocks+Bullets:
+    for i in Blocks+Grand+Items+Bullets:
         i.draw()
     if Winner:
         screen.draw.text(Winner+' wins!',(WIDTH*0.25,HEIGHT*0.25),color='yellow',fontsize=175)
@@ -188,6 +235,11 @@ def update():
         i.up()
         if i.Death:
             Bullets.remove(i)
+    for i in Items:
+        i.up()
+        if i.Death:
+            Items.remove(i)
+            
     if len(Grand)==1:
         Winner=Grand[0].Team
 
@@ -197,8 +249,9 @@ def on_key_down(key):
         i.keydown(key)
     if Winner and key==keys.RETURN:
         Winner=''
-        playerinit()
+        Bullets=[]
         blockinit()
-
+        playerinit()
+    
     
 pgzrun.go()

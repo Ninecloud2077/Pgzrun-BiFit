@@ -78,11 +78,19 @@ class Player:
         self.HP=10
         self.Death=0
         self.Jump=1
-        self.FD=1
+        self.FD=1 #1-left 0-right
         self.Force=[0,0]
         self.posinit()
 
+        self.Gun=Actor('gun')
+
     def draw(self):
+        if self.FD:
+            self.Gun.midright=self.Actor.midleft
+        else:
+            self.Gun.midleft=self.Actor.midright
+            
+        self.Gun.draw()
         self.Actor.draw()
         screen.draw.text(str(self.HP),self.Actor.topleft,fontsize=15)
 
@@ -159,7 +167,7 @@ class Player:
     def keydown(self,key):
         if self.Jump and key==Player.TeamsAndKeys[self.Team]:
             for i in Blocks:
-                if abs(self.Actor.bottom-i.Actor.top)<=3:
+                if abs(self.Actor.x-i.Actor.x)<=30 and abs(self.Actor.bottom-i.Actor.top)<=3:
                     break
             else:
                 self.Jump-=1
@@ -213,7 +221,7 @@ def additem():
             else:
                 w=0
                 Items.append(t)
-clock.schedule_interval(additem,3)
+clock.schedule_interval(additem,6)
                 
 
 def draw():

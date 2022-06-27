@@ -1,5 +1,5 @@
 import pgzrun
-from random import randint
+from random import randint,choice
 
 WIDTH,HEIGHT=1000,400
 
@@ -47,7 +47,7 @@ class Bullet:
 class Item:
     def posinit(self):
         self.Actor.midbottom=Blocks[randint(0,len(Blocks)-1)].Actor.midtop
-    def __init__(self,Img):
+    def __init__(self,Img='empty'):
         self.Actor=Actor(Img)
         self.posinit()
         self.Death=0
@@ -55,24 +55,46 @@ class Item:
     def draw(self):
         self.Actor.draw()
 
+    def up(self):
+        for i in Grand:
+            if self.Actor.colliderect(i.Actor):
+                self.collide(i)
+                self.Death=1
+                return
+
+    def collide(self,Target):
+        pass
+    
+
 class Heal(Item):
     def __init__(self,Img='heal'):
         super().__init__(Img)
 
-    def up(self):
-        for i in Grand:
-            if self.Actor.colliderect(i.Actor):
-                i.takedmg(-2)
-                self.Death=1
+    def collide(self,Target):
+        Target.takedmg(-2)
+
+
+class ShieldItem(Item):
+    def __init__(self,Img='shield'):
+        super().__init__(Img)
+
+    def collide(self,Target):
+        Target.SK['Shield']=180
 
 
 class Player:
+    
     TeamsAndKeys={'red':keys.W, 'blue':keys.UP}
     TeamsAndBullets={'red':keys.SPACE, 'blue':keys.KP_ENTER}
     
     def posinit(self):
         self.Actor.midbottom=Blocks[randint(0,len(Blocks)-1)].Actor.midtop
-    def __init__(self,Team='red'):
+        
+    def skinit(self):
+        self.SK={}
+        self.SK['Shield']=0
+        
+    def othersinit(self,Team):
         self.Team=Team
         self.Actor=Actor(Team)
         self.HP=10
@@ -80,24 +102,28 @@ class Player:
         self.Jump=1
         self.FD=1 #1-left 0-right
         self.Force=[0,0]
+        
+    def __init__(self,Team='red'):
+        self.othersinit(Team)
         self.posinit()
+        self.skinit()
 
         self.Gun=Actor('gun')
 
     def draw(self):
+        if self.SK['Shield']:
+            screen.draw.circle(self.Actor.center,8,(63,133,255))
+            screen.draw.text(str(round(self.SK['Shield']/60,1)),(self.Actor.left,self.Actor.top-8),fontsize=15,color='blue')
+        
         if self.FD:
             self.Gun.midright=self.Actor.midleft
         else:
             self.Gun.midleft=self.Actor.midright
-            
         self.Gun.draw()
+        
         self.Actor.draw()
+        
         screen.draw.text(str(self.HP),self.Actor.topleft,fontsize=15)
-
-    def up(self):
-        self.move()
-        self.keyup()
-        self.collide()
 
     def collide(self):
         for i in Grand:
@@ -164,6 +190,16 @@ class Player:
                 self.Force[0]=3
                 self.FD=0
 
+    def skup(self):
+        if self.SK['Shield']>0:
+            self.SK['Shield']-=1
+
+    def up(self):
+        self.move()
+        self.keyup()
+        self.collide()
+        self.skup()
+
     def keydown(self,key):
         if self.Jump and key==Player.TeamsAndKeys[self.Team]:
             for i in Blocks:
@@ -178,12 +214,13 @@ class Player:
             Bullets.append(Bullet(self,self.FD*180))
     
     def takedmg(self,Dmg):
+        if self.SK['Shield'] and Dmg>0:
+            return
+        
         self.HP-=Dmg
         if Dmg>0 and self.HP<=0:
             self.Death=1
-        if Dmg<0 and self.HP>10:
-           self.HP=10
- 
+
 
 Blocks=[]
 def blockinit():
@@ -205,13 +242,16 @@ def playerinit():
 playerinit()
 
 Bullets=[]
-Items=[Heal()]
+Items=[]
 
 Winner=''
 
+ItemObj=[Heal,ShieldItem]
+
 def additem():
+    global ItemObj
     if len(Items)<5:
-        t=Heal()
+        t=choice(ItemObj)()
         w=1
         while w:
             for i in Items:
@@ -258,6 +298,7 @@ def on_key_down(key):
     if Winner and key==keys.RETURN:
         Winner=''
         Bullets=[]
+        Items=[]
         blockinit()
         playerinit()
     

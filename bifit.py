@@ -13,6 +13,51 @@ class Block:
         self.Actor.draw()
 
 
+class Power:
+    def __init__(self,Owner,SRadius,Speed=1,Dmg=0,Force=0,Freeze=0,Color=(0,0,0)):
+        self.Owner=Owner
+        self.Pos=self.Owner.Actor.center
+        self.Team=self.Owner.Team
+        self.Radius=0
+        self.SRadius=SRadius
+        self.Speed=Speed
+        self.Dmg=Dmg
+        self.Attacked=[]
+        self.Force=Force
+        self.Freeze=Freeze
+        self.Color=Color
+        self.Death=0
+
+    def draw(self):
+        screen.draw.circle(self.Pos,self.Radius,self.Color)
+
+    def up(self):
+        self.Radius+=self.Speed
+        if self.Radius>=self.SRadius:
+            self.Death=1
+            return
+        
+        self.collide()
+
+    def collide(self):
+        for i in Grand:
+            if i not in self.Attacked and i.Team!=self.Owner.Team and i.Actor.distance_to(self.Pos)<=self.Radius:
+                i.takedmg(self.Dmg)
+                self.force(i)
+                self.Attacked.append(i)
+
+    def force(self,i):
+        if self.Pos[0]<i.Actor.x:
+            i.Force[0]+=self.Force
+        elif self.Pos[0]>i.Actor.x:
+            i.Force[0]-=self.Force
+
+        if self.Pos[1]<=i.Actor.y:
+            i.Force[1]-=self.Force
+        else:
+            i.Force[1]+=self.Force
+        
+
 class Bullet:
     def __init__(self,Owner,Angle=0,Speed=5,Img='pistol'):
         self.Actor=Actor(Img,Owner.Actor.center)
@@ -24,25 +69,70 @@ class Bullet:
     def draw(self):
         self.Actor.draw()
 
-    def up(self):
+    def move(self):
         if self.Actor.angle==0:
             self.Actor.x+=self.Speed
         else:
             self.Actor.x-=self.Speed
-
         if self.Actor.x<0 or self.Actor.x>WIDTH:
             self.Death=1
-            return
+
+    def collide(self):
         for i in Grand:
             if self.Team!=i.Team and self.Actor.colliderect(i.Actor):
                 i.takedmg(1)
                 self.Death=1
-                return
+                break
+
+    def block(self):
         for i in Blocks:
             if self.Actor.colliderect(i.Actor):
                 self.Death=1
-                return
+                break        
+    
+    def up(self):
+        self.move()
+        self.block()
+        self.collide()
+
+
+class IceRocket(Bullet):
+    def __init__(self,Owner,Angle=90,Speed=7,Wait=60,Img='icerocket'):
+        super().__init__(Owner,Angle,Speed,Img)
+        self.Actor.angle=90
+
+        self.Wait=Wait
         
+        for i in Grand:
+            if i.Team!=self.Team:
+                self.Target=i.Actor.x
+                break
+
+    def move(self):
+        if self.Actor.angle==90:
+            self.Actor.y-=self.Speed
+            if self.Actor.bottom<=0:
+                self.Actor.angle=-90
+                self.Actor.x=self.Target
+            
+        elif self.Actor.angle==-90:
+            self.Actor.y+=self.Speed
+
+        elif self.Actor.angle==0:
+            self.Wait+=1
+            if self.Wait==30:
+                self.Actor.angle=-90
+
+    def block(self):
+        if self.Actor.angle!=-90:
+            return
+        super().block()
+        
+    def up(self):
+        super().up()
+        if self.Death:
+            Bullets.append(Power(Owner=self,SRadius=70,Speed=3,Dmg=1,Force=8,Freeze=1,Color=(63,133,255)))
+
 
 class Item:
     def posinit(self):
@@ -80,6 +170,14 @@ class ShieldItem(Item):
 
     def collide(self,Target):
         Target.SK['Shield']=180
+
+
+class IceItem(Item):
+    def __init__(self,Img='ice'):
+        super().__init__(Img)
+
+    def collide(self,Target):
+        Bullets.append(IceRocket(Target))
 
 
 class Player:
@@ -246,7 +344,7 @@ Items=[]
 
 Winner=''
 
-ItemObj=[Heal,ShieldItem]
+ItemObj=[Heal,ShieldItem,IceItem]
 
 def additem():
     global ItemObj
@@ -274,7 +372,7 @@ def draw():
         screen.draw.text('Main_Enter to Restart',(WIDTH*0.25,HEIGHT*0.5),color='yellow',fontsize=80)
 
 def update():
-    global Winner,Grand
+    global Winner,Grand,Bullets
     for i in Grand:
         i.up()
         if i.Death:
@@ -290,17 +388,20 @@ def update():
             
     if len(Grand)==1:
         Winner=Grand[0].Team
+        clock.unschedule(additem)
 
 def on_key_down(key):
     global Winner,Grand
     for i in Grand:
         i.keydown(key)
+        
     if Winner and key==keys.RETURN:
         Winner=''
         Bullets=[]
         Items=[]
         blockinit()
         playerinit()
+        clock.schedule_interval(additem,6)
     
     
 pgzrun.go()

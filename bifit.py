@@ -44,6 +44,8 @@ class Power:
             if i not in self.Attacked and i.Team!=self.Owner.Team and i.Actor.distance_to(self.Pos)<=self.Radius:
                 i.takedmg(self.Dmg)
                 self.force(i)
+                if self.Freeze:
+                    i.SK['Freeze']+=self.Freeze
                 self.Attacked.append(i)
 
     def force(self,i):
@@ -112,15 +114,15 @@ class IceRocket(Bullet):
         if self.Actor.angle==90:
             self.Actor.y-=self.Speed
             if self.Actor.bottom<=0:
-                self.Actor.angle=-90
+                self.Actor.angle=0
                 self.Actor.x=self.Target
             
         elif self.Actor.angle==-90:
             self.Actor.y+=self.Speed
 
         elif self.Actor.angle==0:
-            self.Wait+=1
-            if self.Wait==30:
+            self.Wait-=1
+            if not self.Wait:
                 self.Actor.angle=-90
 
     def block(self):
@@ -131,7 +133,8 @@ class IceRocket(Bullet):
     def up(self):
         super().up()
         if self.Death:
-            Bullets.append(Power(Owner=self,SRadius=70,Speed=3,Dmg=1,Force=8,Freeze=1,Color=(63,133,255)))
+            Bullets.append(Power(Owner=self,SRadius=70,Speed=3,Dmg=1,Force=8,Freeze=60,Color=(63,133,255)))
+
 
 
 class Item:
@@ -154,7 +157,7 @@ class Item:
 
     def collide(self,Target):
         pass
-    
+
 
 class Heal(Item):
     def __init__(self,Img='heal'):
@@ -180,6 +183,7 @@ class IceItem(Item):
         Bullets.append(IceRocket(Target))
 
 
+
 class Player:
     
     TeamsAndKeys={'red':keys.W, 'blue':keys.UP}
@@ -191,6 +195,7 @@ class Player:
     def skinit(self):
         self.SK={}
         self.SK['Shield']=0
+        self.SK['Freeze']=0
         
     def othersinit(self,Team):
         self.Team=Team
@@ -201,7 +206,7 @@ class Player:
         self.FD=1 #1-left 0-right
         self.Force=[0,0]
         
-    def __init__(self,Team='red'):
+    def __init__(self,Team):
         self.othersinit(Team)
         self.posinit()
         self.skinit()
@@ -212,6 +217,13 @@ class Player:
         if self.SK['Shield']:
             screen.draw.circle(self.Actor.center,8,(63,133,255))
             screen.draw.text(str(round(self.SK['Shield']/60,1)),(self.Actor.left,self.Actor.top-8),fontsize=15,color='blue')
+        if self.SK['Freeze']:
+            self.Actor.image='freeze'
+            screen.draw.text(str(round(self.SK['Freeze']/60,1)),(self.Actor.right+3,self.Actor.top),fontsize=15,color='lightblue')
+        elif self.Jump:
+            self.Actor.image=self.Team
+        elif not self.Jump:
+            self.Actor.image=self.Team+'_d'
         
         if self.FD:
             self.Gun.midright=self.Actor.midleft
@@ -273,6 +285,10 @@ class Player:
 
 
     def keyup(self):
+        if self.SK['Freeze']:
+            self.SK['Freeze']-=1
+            return
+        
         if self.Team=='red':
             if keyboard.a:
                 self.Force[0]=-3

@@ -60,6 +60,31 @@ class Power:
             i.Force[1]+=self.Force
 
 
+class BIF:
+    def __init__(self,Owner,Img='bif',Radius=200,Speed=3,Force=12,Wait=90,LifeTime=450):
+        self.Actor=Actor(Img,Owner.Actor.center)
+        self.Owner=Owner
+        self.Team=Owner.Team
+        self.Radius=Radius
+        self.Speed=Speed
+        self.Force=12
+        self.Wait=Wait
+        self.LifeTime=LifeTime
+        self.Tick=0
+        self.Death=0
+
+    def draw(self):
+        self.Actor.draw()
+
+    def up(self):
+        self.Tick+=1
+        if self.Tick%self.Wait==0:
+            Bullets.append(Power(Owner=self,SRadius=self.Radius,Force=self.Force,Speed=self.Speed,Color=(255,212,56)))
+        if self.Tick==self.LifeTime:
+            self.Death=1
+            return
+        
+
 class Bullet:
     def __init__(self,Owner,Angle=0,Dmg=1,Speed=5,Img='pistol'):
         self.Actor=Actor(Img,Owner.Actor.center)
@@ -363,6 +388,7 @@ def randenemy(Team):
     return i
 
 
+Bullets=[BIF(Grand[0])]
 Items=[]
 
 Winner=''

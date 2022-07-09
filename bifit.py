@@ -357,7 +357,15 @@ def playerinit():
     Grand=[Player('red'),Player('blue')]
 playerinit()
 
-Bullets=[]
+
+def randenemy(Team):
+    global Grand
+    i=choice(Grand)
+    while i.Team==Team:
+        i=choice(Grand)
+    return i
+
+
 Items=[]
 
 Winner=''

@@ -61,9 +61,10 @@ class Power:
 
 
 class Bullet:
-    def __init__(self,Owner,Angle=0,Speed=5,Img='pistol'):
+    def __init__(self,Owner,Angle=0,Dmg=1,Speed=5,Img='pistol'):
         self.Actor=Actor(Img,Owner.Actor.center)
         self.Actor.angle=Angle
+        self.Dmg=Dmg
         self.Team=Owner.Team
         self.Speed=Speed
         self.Death=0
@@ -82,7 +83,7 @@ class Bullet:
     def collide(self):
         for i in Grand:
             if self.Team!=i.Team and self.Actor.colliderect(i.Actor):
-                i.takedmg(1)
+                i.takedmg(self.Dmg)
                 self.Death=1
                 break
 
@@ -99,16 +100,12 @@ class Bullet:
 
 
 class IceRocket(Bullet):
-    def __init__(self,Owner,Angle=90,Speed=7,Wait=60,Img='icerocket'):
-        super().__init__(Owner,Angle,Speed,Img)
-        self.Actor.angle=90
+    def __init__(self,Owner,Dmg=2,Angle=90,Speed=7,Wait=45,Img='icerocket'):
+        super().__init__(Owner,Angle,Dmg,Speed,Img)
 
         self.Wait=Wait
         
-        for i in Grand:
-            if i.Team!=self.Team:
-                self.Target=i.Actor.x
-                break
+        self.Target=randenemy(self.Team).Actor.x
 
     def move(self):
         if self.Actor.angle==90:
@@ -133,7 +130,7 @@ class IceRocket(Bullet):
     def up(self):
         super().up()
         if self.Death:
-            Bullets.append(Power(Owner=self,SRadius=70,Speed=3,Dmg=1,Force=8,Freeze=60,Color=(63,133,255)))
+            Bullets.append(Power(Owner=self,SRadius=100,Speed=3,Dmg=self.Dmg,Force=10,Freeze=60,Color=(63,133,255)))
 
 
 

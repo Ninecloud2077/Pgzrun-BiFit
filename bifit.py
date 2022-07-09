@@ -58,7 +58,7 @@ class Power:
             i.Force[1]-=self.Force
         else:
             i.Force[1]+=self.Force
-        
+
 
 class Bullet:
     def __init__(self,Owner,Angle=0,Speed=5,Img='pistol'):
@@ -222,7 +222,7 @@ class Player:
             screen.draw.text(str(round(self.SK['Freeze']/60,1)),(self.Actor.right+3,self.Actor.top),fontsize=15,color='lightblue')
         elif self.Jump:
             self.Actor.image=self.Team
-        elif not self.Jump:
+        elif (not self.Jump):
             self.Actor.image=self.Team+'_d'
         
         if self.FD:
@@ -377,7 +377,9 @@ def additem():
             else:
                 w=0
                 Items.append(t)
-clock.schedule_interval(additem,6)
+def iteminit():
+    clock.schedule_interval(additem,6)
+iteminit()
                 
 
 def draw():
@@ -386,11 +388,11 @@ def draw():
     for i in Blocks+Grand+Items+Bullets:
         i.draw()
     if Winner:
-        screen.draw.text(Winner+' wins!',(WIDTH*0.25,HEIGHT*0.25),color='yellow',fontsize=175)
-        screen.draw.text('Main_Enter to Restart',(WIDTH*0.25,HEIGHT*0.5),color='yellow',fontsize=80)
+        screen.draw.text(Winner+' wins!',(WIDTH*0.25,HEIGHT*0.25),color='yellow',fontsize=100,fontname='baush93')
+        screen.draw.text('Main_Enter to Restart',(WIDTH*0.25,HEIGHT*0.5),color='yellow',fontsize=65,fontname='baush93')
 
 def update():
-    global Winner,Grand,Bullets
+    global Winner,Grand,Bullets,Items
     for i in Grand:
         i.up()
         if i.Death:
@@ -407,19 +409,19 @@ def update():
     if len(Grand)==1:
         Winner=Grand[0].Team
         clock.unschedule(additem)
+        Items=[]
+        Bullets=[]
 
 def on_key_down(key):
-    global Winner,Grand
+    global Winner,Grand,Bullets,Items
     for i in Grand:
         i.keydown(key)
         
     if Winner and key==keys.RETURN:
         Winner=''
-        Bullets=[]
-        Items=[]
         blockinit()
         playerinit()
-        clock.schedule_interval(additem,6)
+        iteminit()
     
     
 pgzrun.go()

@@ -315,6 +315,8 @@ class Player:
         self.skup()
 
     def keydown(self,key):
+        if self.SK['Freeze']:
+            return
         if self.Jump and key==Player.TeamsAndKeys[self.Team]:
             for i in Blocks:
                 if abs(self.Actor.x-i.Actor.x)<=30 and abs(self.Actor.bottom-i.Actor.top)<=3:

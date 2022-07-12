@@ -265,7 +265,7 @@ class BIFItem(Item):
         Bullets.append(BIF(Target))
 
 class FITItem(Item):
-    def __init__(self, Img='empty'):
+    def __init__(self, Img='fititem'):
         super().__init__(Img)
     
     def collide(self, Target):

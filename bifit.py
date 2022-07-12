@@ -85,7 +85,8 @@ class Pull(Power):
 
 class BIF:
     def __init__(self,Owner,Img='bif',Radius=200,Speed=3,Force=12,Wait=90,LifeTime=450):
-        self.Actor=Actor(Img,Owner.Actor.center)
+        self.Actor=Actor(Img)
+        self.Actor.center=Owner.Actor.center
         self.Owner=Owner
         self.Team=Owner.Team
         self.Radius=Radius
@@ -263,6 +264,12 @@ class BIFItem(Item):
     def collide(self,Target):
         Bullets.append(BIF(Target))
 
+class FITItem(Item):
+    def __init__(self, Img='empty'):
+        super().__init__(Img)
+    
+    def collide(self, Target):
+        Bullets.append(FIT(Target))
 
 
 class Player:
@@ -452,7 +459,7 @@ Items=[]
 
 Winner=''
 
-ItemObj=[Heal,ShieldItem,IceItem,BIFItem]
+ItemObj=[Heal,ShieldItem,IceItem,BIFItem,FITItem]
 
 def additem():
     global ItemObj

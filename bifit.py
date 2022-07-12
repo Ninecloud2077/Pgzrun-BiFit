@@ -204,6 +204,13 @@ class IceItem(Item):
     def collide(self,Target):
         Bullets.append(IceRocket(Target))
 
+class BIFItem(Item):
+    def __init__(self,Img='bifitem'):
+        super().__init__(Img)
+
+    def collide(self,Target):
+        Bullets.append(BIF(Target))
+
 
 
 class Player:
@@ -388,12 +395,12 @@ def randenemy(Team):
     return i
 
 
-Bullets=[BIF(Grand[0])]
+Bullets=[]
 Items=[]
 
 Winner=''
 
-ItemObj=[Heal,ShieldItem,IceItem]
+ItemObj=[Heal,ShieldItem,IceItem,BIFItem]
 
 def additem():
     global ItemObj

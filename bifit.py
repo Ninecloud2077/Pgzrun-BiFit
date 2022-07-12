@@ -36,7 +36,6 @@ class Power:
         if self.Radius>=self.SRadius:
             self.Death=1
             return
-        
         self.collide()
 
     def collide(self):
@@ -58,6 +57,30 @@ class Power:
             i.Force[1]+=self.Force
         else:
             i.Force[1]-=self.Force
+
+
+class Pull(Power):
+    def __init__(self, Owner, SRadius, Speed=1, Dmg=0, Force=0, Freeze=0, Color=(0, 0, 0)):
+        super().__init__(Owner, SRadius, Speed, Dmg, Force, Freeze, Color)
+        self.Radius=self.SRadius
+    
+    def up(self):
+        self.Radius-=1
+        if not self.Radius:
+            self.Death=1
+            return
+        self.collide()
+
+    def force(self,i):
+        if self.Pos[0]<i.Actor.x:
+            i.Force[0]-=self.Force
+        elif self.Pos[0]>i.Actor.x:
+            i.Force[0]+=self.Force
+
+        if self.Pos[1]<=i.Actor.y:
+            i.Force[1]-=self.Force
+        else:
+            i.Force[1]+=self.Force
 
 
 class BIF:
@@ -84,6 +107,19 @@ class BIF:
             self.Death=1
             return
         
+
+class FIT(BIF):
+    def __init__(self, Owner, Img='fit', Radius=200, Speed=5, Force=12, Wait=90, LifeTime=450):
+        super().__init__(Owner, Img, Radius, Speed, Force, Wait, LifeTime)
+    
+    def up(self):
+        self.Tick+=1
+        if self.Tick%self.Wait==0:
+            Bullets.append(Pull(Owner=self,SRadius=self.Radius,Force=self.Force,Speed=self.Speed,Color=(13,225,162)))
+        if self.Tick==self.LifeTime:
+            self.Death=1
+            return
+
 
 class Bullet:
     def __init__(self,Owner,Angle=0,Dmg=1,Speed=5,Img='pistol'):
@@ -263,7 +299,7 @@ class Player:
             screen.draw.text(str(round(self.SK['Shield']/60,1)),(self.Actor.left,self.Actor.top-8),fontsize=15,color='blue')
         if self.SK['Freeze']:
             self.Actor.image='freeze'
-            screen.draw.text(str(round(self.SK['Freeze']/60,1)),(self.Actor.right+3,self.Actor.top),fontsize=15,color='lightblue')
+            screen.draw.text(str(round(self.SK['Freeze']/60,1)),self.Actor.topright,fontsize=15,color='lightblue')
         elif self.Jump:
             self.Actor.image=self.Team
         elif (not self.Jump):

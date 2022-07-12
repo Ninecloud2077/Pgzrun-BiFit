@@ -157,6 +157,22 @@ class IceRocket(Bullet):
         if self.Death:
             Bullets.append(Power(Owner=self,SRadius=100,Speed=3,Dmg=self.Dmg,Force=10,Freeze=60,Color=(63,133,255)))
 
+class DJ:
+    def __init__(self,Pos,Img='dj',Speed=5,Lifetime=6):
+        self.Actor=Actor(Img,Pos)
+        self.Speed=Speed
+        self.Lifetime=Lifetime
+        self.Death=0
+    
+    def draw(self):
+        self.Actor.draw()
+    
+    def up(self):
+        self.Actor.y+=self.Speed
+        self.Lifetime-=1
+        if not self.Lifetime:
+            self.Death=1
+            return
 
 
 class Item:
@@ -353,6 +369,7 @@ class Player:
             else:
                 self.Jump-=1
                 self.Actor.image+='_d'
+                Bullets.append(DJ(self.Actor.midbottom))
             self.Force[1]=-15
 
         if key==Player.TeamsAndBullets[self.Team]:

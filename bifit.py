@@ -55,9 +55,9 @@ class Power:
             i.Force[0]-=self.Force
 
         if self.Pos[1]<=i.Actor.y:
-            i.Force[1]-=self.Force
-        else:
             i.Force[1]+=self.Force
+        else:
+            i.Force[1]-=self.Force
 
 
 class BIF:
@@ -230,7 +230,6 @@ class BIFItem(Item):
 
 
 class Player:
-    
     TeamsAndKeys={'red':keys.W, 'blue':keys.UP}
     TeamsAndBullets={'red':keys.SPACE, 'blue':keys.KP_ENTER}
     

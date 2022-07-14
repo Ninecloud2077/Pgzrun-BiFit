@@ -521,4 +521,4 @@ def on_key_down(key):
         iteminit()
     
     
-pgzrun.go()
+pgzrun.go(Title='BiFiT')

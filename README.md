@@ -1,4 +1,7 @@
 # Pgzrun-BiFiT
+***
+**请注意:本库已经封档并转往[Pgzrun-Minis](https://github.com/Ninecloud2077/Pgzrun-Minis)的分支**
+***
 _made by Ninecloud Latest:2022/7/9_  
 _本来不想写README，github一催就写得停不下来了_  
 基于[Python](https://www.python.org)中的[Pygame-Zero](https://pygame-zero.readthedocs.io)  
